@@ -1,10 +1,42 @@
-# WebSockets Test
+# WebSockets Test (helm chart)
 
-This is a simple application to test websockets.
+This is a simple application to test websockets. (echo test)
 
-This is mostly from: <https://websockets.readthedocs.io/en/stable/howto/kubernetes.html>.
+This is mostly from [the python websockets tutorial docs](https://websockets.readthedocs.io/en/stable/howto/kubernetes.html).
 
-## Setup
+## Installation
+
+```bash
+helm repo add tjm-websockets https://tjm.github.io/websockets-test/
+helm repo update
+helm install websockets-test tjm-websockets/websockets-test
+```
+
+You may also want to provide a `-f myValues.yaml` option.
+
+Example `myValues.yaml` annotations for Citrix Ingress:
+
+```yaml
+ingress:
+  enabled: true
+  annotations:
+    ingress.citrix.com/frontend-ip: 10.1.2.3
+    ingress.citrix.com/frontend-httpprofile: '{"webSocket" : "enabled"}'
+    ingress.citrix.com/frontend-tcpprofile: '{"ws":"enabled"}'
+    ingress.citrix.com/insecure-termination: redirect
+    ingress.citrix.com/preconfigured-certkey: '{"certs": [ {"name": "wc.example.com", "type":"default"} ] }'
+    kubernetes.io/ingress.class: citrix
+  hosts:
+    - host: cluster-name-ws-test.example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - cluster-name-ws-test.example.com
+```
+
+## Development
 
 * Prerequisites - Python!
 
@@ -16,7 +48,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Local Testing
+### Local Testing
 
 * Activate VirtualEnv
 
@@ -39,7 +71,7 @@ python -m websockets ws://localhost
 
 NOTE: Anything typed should be echoed back after a short delay.
 
-## Docker Image / Testing
+### Docker Image / Testing
 
 * Create docker image
 
@@ -62,36 +94,20 @@ python -m websockets ws://localhost:32080
 
 NOTE: Anything typed should be echoed back after a short delay.
 
-## Kubernetes Deployment
+### Kubernetes Helm Deployment Testing
 
 NOTE: This depends on the docker image above being deployed to GHCR (GitHub Container Registry).
 
-* Create a MyValues.yaml to define ingress parameters (citrix example)
-
-```yaml
-ingress:
-  enabled: true
-  annotations:
-    ingress.citrix.com/frontend-ip: 10.201.14.227
-    ingress.citrix.com/frontend-httpprofile: '{"webSocket" : "enabled"}'
-    ingress.citrix.com/frontend-tcpprofile: '{"ws":"enabled"}'
-    ingress.citrix.com/insecure-termination: redirect
-    ingress.citrix.com/preconfigured-certkey: '{"certs": [ {"name": "wc.example.com", "type":"default"} ] }'
-    kubernetes.io/ingress.class: citrix
-  hosts:
-    - host: cluster-name-ws-test.example.com
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls:
-    - hosts:
-        - cluster-name-ws-test.example.com
-```
-
-* Deploy helm chart
+* Render Templates without installing
 
 ```bash
-helm upgrade --install websockets-test ./chart/websockets-test -f MyValues.yaml
+helm template websockets-test ./chart/websockets-test -f myValues.yaml
+```
+
+* Deploy local helm chart (during chart testing/development)
+
+```bash
+helm upgrade --install websockets-test ./chart/websockets-test -f myValues.yaml
 ```
 
 * Test
@@ -107,4 +123,4 @@ NOTE: Anything typed should be echoed back after a short delay.
 
 ## TODO
 
-* Find a way to automate testing
+* Use the code from the benchmark.py (from the websockets docs) for automated testing
