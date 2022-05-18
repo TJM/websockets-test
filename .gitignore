@@ -1,0 +1,6 @@
+# Ignore python VENVs
+/.venv
+/venv
+
+# Ignore local test yaml files
+/*.yaml
